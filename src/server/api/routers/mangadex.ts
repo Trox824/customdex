@@ -17,6 +17,8 @@ const includesEnum = z.enum([
   Mangadex.Static.Includes.ARTIST,
 ]);
 
+const orderEnum = z.enum([Mangadex.Static.Order.DESC]);
+
 export const mangadexRouter = createTRPCRouter({
   getSearchManga: publicProcedure
     .input(
@@ -30,7 +32,6 @@ export const mangadexRouter = createTRPCRouter({
             latestUploadedChapter: z
               .enum([Mangadex.Static.Order.DESC])
               .optional(),
-            followedCount: z.enum([Mangadex.Static.Order.DESC]).optional(),
           })
           .optional(),
         includes: z.array(includesEnum).optional(),
@@ -67,12 +68,10 @@ export const mangadexRouter = createTRPCRouter({
         contentRating: z.array(contentRatingEnum).optional(),
         order: z
           .object({
-            latestUploadedChapter: z
-              .enum([Mangadex.Static.Order.DESC])
-              .optional(),
-            followedCount: z.enum([Mangadex.Static.Order.DESC]).optional(),
-            createdAt: z.enum([Mangadex.Static.Order.DESC]).optional(),
-            rating: z.enum([Mangadex.Static.Order.DESC]).optional(),
+            latestUploadedChapter: orderEnum.optional(),
+            followedCount: orderEnum.optional(),
+            rating: orderEnum.optional(),
+            createdAt: orderEnum.optional(),
           })
           .optional(),
         includes: z.array(includesEnum).optional(),
