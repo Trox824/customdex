@@ -20,7 +20,37 @@ const includesEnum = z.enum([
 
 const orderEnum = z.enum([Mangadex.Static.Order.DESC]);
 
-// Helper function for MangaDex API calls
+// Helper function to properly format query parameters for MangaDex API
+const formatQueryParams = (input: any) => {
+  const params = new URLSearchParams();
+
+  Object.entries(input).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+
+    if (key === "order" && typeof value === "object") {
+      // Handle order object specially
+      Object.entries(value).forEach(([orderKey, orderValue]) => {
+        params.append(`order[${orderKey}]`, String(orderValue));
+      });
+    } else if (Array.isArray(value)) {
+      // Handle arrays
+      value.forEach((v) => {
+        params.append(`${key}[]`, String(v));
+      });
+    } else if (typeof value === "object") {
+      // Handle other objects
+      Object.entries(value).forEach(([objKey, objValue]) => {
+        params.append(`${key}[${objKey}]`, String(objValue));
+      });
+    } else {
+      // Handle primitive values
+      params.append(key, String(value));
+    }
+  });
+
+  return params;
+};
+
 const mangadexFetch = async (endpoint: string, options: any = {}) => {
   const baseUrl = "https://api.mangadex.org";
   const response = await fetch(`${baseUrl}${endpoint}`, {
@@ -33,7 +63,12 @@ const mangadexFetch = async (endpoint: string, options: any = {}) => {
   });
 
   if (!response.ok) {
-    throw new Error(`MangaDex API error: ${response.statusText}`);
+    const error = await response.json().catch(() => null);
+    throw new Error(
+      `MangaDex API error: ${response.statusText}${
+        error ? ` - ${JSON.stringify(error)}` : ""
+      }`,
+    );
   }
 
   return response.json();
@@ -59,21 +94,8 @@ export const mangadexRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const qs = new URLSearchParams();
-      // Add input parameters to query string
-      Object.entries(input).forEach(([key, value]) => {
-        if (value !== undefined) {
-          if (Array.isArray(value)) {
-            value.forEach((v) => qs.append(key + "[]", String(v)));
-          } else if (typeof value === "object") {
-            qs.append(key, JSON.stringify(value));
-          } else {
-            qs.append(key, String(value));
-          }
-        }
-      });
-
-      const response = await mangadexFetch(`/manga?${qs}`);
+      const params = formatQueryParams(input);
+      const response = await mangadexFetch(`/manga?${params}`);
       return response;
     }),
 
