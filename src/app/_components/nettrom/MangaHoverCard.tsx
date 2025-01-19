@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { api } from "~/trpc/react";
 
 import { ExtendChapter } from "~/app/_components/types/mangadex";
 import { Constants } from "~/app/constants";
@@ -9,7 +10,8 @@ import { AspectRatio } from "~/app/_components/shadcn/aspect-ratio";
 import { twMerge } from "tailwind-merge";
 import { useMangadex } from "~/app/_components/contexts/mangadex";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
-import useChapterList from "~/app/_components/hooks/mangadex/useChapterList";
+import { MangadexApi } from "~/api";
+
 interface MangaHoverCardProps {
   id: string;
   title: string;
@@ -32,10 +34,18 @@ export const MangaHoverCard: React.FC<MangaHoverCardProps> = ({
   tags,
 }) => {
   const { mangas } = useMangadex();
-  const { chapters } = useChapterList(id, {
+
+  const { data: chapterData } = api.chapter.getChapterList.useQuery({
     limit: 5,
     offset: 0,
+    manga: id,
+    includes: [MangadexApi.Static.Includes.SCANLATION_GROUP],
   });
+
+  const chapters: ExtendChapter[] = (
+    chapterData?.data && Array.isArray(chapterData.data) ? chapterData.data : []
+  ) as ExtendChapter[];
+
   return (
     <HoverCardPrimitive.Root openDelay={150} closeDelay={150}>
       <HoverCardPrimitive.Trigger asChild>
