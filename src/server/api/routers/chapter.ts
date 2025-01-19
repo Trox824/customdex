@@ -1,79 +1,105 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import * as Mangadex from "~/api/mangadex";
-import fetch from "node-fetch";
-
-// Create enum validation schema for includes
-const includesEnum = z.enum([
-  Mangadex.Static.Includes.SCANLATION_GROUP,
-  Mangadex.Static.Includes.MANGA,
-  Mangadex.Static.Includes.USER,
-]);
-
-const mangadexFetch = async (endpoint: string, options: any = {}) => {
-  const baseUrl = "https://api.mangadex.org";
-  const response = await fetch(`${baseUrl}${endpoint}`, {
-    ...options,
-    headers: {
-      ...options.headers,
-      "User-Agent": "MangaDex/1.0.0 (nthung2k4@gmail.com)",
-      Accept: "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`MangaDex API error: ${response.statusText}`);
-  }
-
-  return response.json();
-};
+import { MangadexApi } from "~/api";
+import { Includes, Order } from "~/api/mangadex/static";
 
 export const chapterRouter = createTRPCRouter({
-  getChapterById: publicProcedure
+  // Get chapter by ID
+  getChapter: publicProcedure
     .input(
       z.object({
         id: z.string(),
-        includes: z.array(z.string()).optional(),
+        includes: z
+          .array(z.enum([Includes.MANGA, Includes.SCANLATION_GROUP]))
+          .optional(),
       }),
     )
     .query(async ({ input }) => {
-      const qs = new URLSearchParams();
-      if (input.includes) {
-        input.includes.forEach((include) => qs.append("includes[]", include));
-      }
+      try {
+        const response = await MangadexApi.Chapter.getChapterId(
+          input.id,
+          input.includes ? { includes: input.includes } : undefined,
+        );
+        if (!response || !response.data) {
+          throw new Error("No data returned from MangaDex");
+        }
+        return response.data;
+      } catch (error) {
+        console.error("Chapter fetch error:", error);
 
-      const response = await mangadexFetch(`/chapter/${input.id}?${qs}`);
-      return response;
+        if (error instanceof Error) {
+          throw new Error(`Failed to fetch chapter: ${error.message}`);
+        }
+        throw new Error("Failed to fetch chapter: Unknown error");
+      }
     }),
 
-  getChapterList: publicProcedure
+  // Get chapter list/feed for a manga
+  getMangaFeed: publicProcedure
     .input(
       z.object({
+        mangaId: z.string(),
         limit: z.number().optional(),
         offset: z.number().optional(),
-        manga: z.string().optional(),
-        title: z.string().optional(),
-        groups: z.array(z.string()).optional(),
-        uploader: z.string().optional(),
-        volume: z.string().optional(),
-        chapter: z.string().optional(),
         translatedLanguage: z.array(z.string()).optional(),
-        includes: z.array(includesEnum).optional(),
+        order: z
+          .object({
+            volume: z.enum([Order.ASC, Order.DESC]).optional(),
+            chapter: z.enum([Order.ASC, Order.DESC]).optional(),
+          })
+          .optional(),
+        includes: z
+          .array(z.enum([Includes.SCANLATION_GROUP, Includes.USER]))
+          .optional(),
       }),
     )
     .query(async ({ input }) => {
-      const qs = new URLSearchParams();
-      Object.entries(input).forEach(([key, value]) => {
-        if (value !== undefined) {
-          if (Array.isArray(value)) {
-            value.forEach((v) => qs.append(key + "[]", v));
-          } else {
-            qs.append(key, String(value));
-          }
-        }
-      });
+      const { mangaId, ...options } = input;
 
-      const response = await mangadexFetch(`/chapter?${qs}`);
-      return response;
+      // Handle offset limit
+      if (options.offset && options.offset > 10000) {
+        options.offset = 10000 - (options.limit || 10);
+      }
+
+      try {
+        const response = await MangadexApi.Manga.getMangaIdFeed(
+          mangaId,
+          options,
+        );
+        return response.data;
+      } catch (error) {
+        throw new Error("Failed to fetch chapter feed");
+      }
+    }),
+
+  // Get chapter pages from AtHome server
+  getChapterPages: publicProcedure
+    .input(
+      z.object({
+        chapterId: z.string(),
+        forcePort443: z.boolean().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const response = await MangadexApi.AtHome.getAtHomeServerChapterId(
+          input.chapterId,
+          { forcePort443: input.forcePort443 },
+        );
+
+        const { baseUrl, chapter } = response.data;
+
+        // Process pages URLs
+        const pages = chapter.data.map(
+          (originalData) => `${baseUrl}/data/${chapter.hash}/${originalData}`,
+        );
+
+        return {
+          pages,
+          chapter: response.data.chapter,
+        };
+      } catch (error) {
+        throw new Error("Failed to fetch chapter pages");
+      }
     }),
 });

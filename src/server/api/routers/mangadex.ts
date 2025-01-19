@@ -1,82 +1,90 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import * as Mangadex from "~/api/mangadex";
-import fetch from "node-fetch";
+import { MangadexApi } from "~/api";
+import { MangaContentRating, Includes } from "~/api/mangadex/static";
 
-// Create enum validation schemas based on MangaDex types
-const contentRatingEnum = z.enum([
-  Mangadex.Static.MangaContentRating.SAFE,
-  Mangadex.Static.MangaContentRating.SUGGESTIVE,
-  Mangadex.Static.MangaContentRating.EROTICA,
-  Mangadex.Static.MangaContentRating.PORNOGRAPHIC,
-]);
+// Configure headers for MangaDex API requests
+const USER_AGENT = "NettromReader/1.0.0 (your@email.com)";
 
-const includesEnum = z.enum([
-  Mangadex.Static.Includes.MANGA,
-  Mangadex.Static.Includes.COVER_ART,
-  Mangadex.Static.Includes.AUTHOR,
-  Mangadex.Static.Includes.ARTIST,
-]);
-
-const orderEnum = z.enum([Mangadex.Static.Order.DESC]);
-
-// Helper function for MangaDex API calls
-const mangadexFetch = async (endpoint: string, options: any = {}) => {
-  const baseUrl = "https://api.mangadex.org";
-  const response = await fetch(`${baseUrl}${endpoint}`, {
-    ...options,
-    headers: {
-      ...options.headers,
-      "User-Agent": "MangaDex/1.0.0 (nthung2k4@gmail.com)",
-      Accept: "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`MangaDex API error: ${response.statusText}`);
-  }
-
-  return response.json();
+// Add this to your MangadexApi util functions or modify them to accept headers
+const headers = {
+  "User-Agent": USER_AGENT,
 };
 
 export const mangadexRouter = createTRPCRouter({
+  // Get manga list with search and filters
   getSearchManga: publicProcedure
     .input(
       z.object({
-        limit: z.number().optional(),
-        offset: z.number().optional(),
+        page: z.number().default(0),
+        limit: z.number().default(32),
+        title: z.string().optional(),
         availableTranslatedLanguage: z.array(z.string()).optional(),
-        contentRating: z.array(contentRatingEnum).optional(),
-        order: z
-          .object({
-            latestUploadedChapter: z
-              .enum([Mangadex.Static.Order.DESC])
-              .optional(),
-          })
+        contentRating: z
+          .array(
+            z.enum([
+              MangaContentRating.SAFE,
+              MangaContentRating.SUGGESTIVE,
+              MangaContentRating.EROTICA,
+              MangaContentRating.PORNOGRAPHIC,
+            ]),
+          )
           .optional(),
-        includes: z.array(includesEnum).optional(),
+        order: z.record(z.string(), z.string()).optional(),
+        includes: z
+          .array(
+            z.enum([
+              Includes.MANGA,
+              Includes.COVER_ART,
+              Includes.AUTHOR,
+              Includes.ARTIST,
+              // Add other Includes values as needed
+            ]),
+          )
+          .optional(),
         hasAvailableChapters: z.enum(["0", "1", "true", "false"]).optional(),
       }),
     )
     .query(async ({ input }) => {
-      const qs = new URLSearchParams();
-      // Add input parameters to query string
-      Object.entries(input).forEach(([key, value]) => {
-        if (value !== undefined) {
-          if (Array.isArray(value)) {
-            value.forEach((v) => qs.append(key + "[]", String(v)));
-          } else if (typeof value === "object") {
-            qs.append(key, JSON.stringify(value));
-          } else {
-            qs.append(key, String(value));
-          }
-        }
-      });
+      const { page, limit, ...rest } = input;
+      const offset = page * limit;
 
-      const response = await mangadexFetch(`/manga?${qs}`);
-      return response;
+      try {
+        const response = await MangadexApi.Manga.getSearchManga({
+          limit,
+          offset,
+          ...rest,
+        });
+
+        // Process the manga data to add cover URLs
+        const processedData = response.data.data.map((manga: any) => {
+          const relationships = manga.relationships || [];
+          const coverArtRel = relationships.find(
+            (rel: any) => rel.type === "cover_art",
+          );
+          const fileName = coverArtRel?.attributes?.fileName;
+
+          const coverUrl = fileName
+            ? `https://uploads.mangadex.org/covers/${manga.id}/${fileName}`
+            : null;
+
+          return {
+            ...manga,
+            coverFileName: fileName,
+            coverUrl,
+          };
+        });
+
+        return {
+          data: processedData,
+          total: response.data.total,
+        };
+      } catch (error) {
+        throw new Error("Failed to fetch manga from MangaDex");
+      }
     }),
 
+  // Get manga by ID
   getMangaById: publicProcedure
     .input(
       z.object({
@@ -85,51 +93,48 @@ export const mangadexRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const qs = new URLSearchParams();
-      if (input.includes) {
-        input.includes.forEach((include) => qs.append("includes[]", include));
+      try {
+        const response = await MangadexApi.Manga.getMangaId(
+          input.id,
+          input.includes ? { includes: input.includes as any } : undefined,
+        );
+        return response.data;
+      } catch (error) {
+        throw new Error("Failed to fetch manga details");
       }
-
-      const response = await mangadexFetch(`/manga/${input.id}?${qs}`);
-      return response;
     }),
 
-  searchManga: publicProcedure
+  // Get manga chapters feed
+  getMangaFeed: publicProcedure
     .input(
       z.object({
-        title: z.string().optional(),
+        mangaId: z.string(),
         limit: z.number().optional(),
         offset: z.number().optional(),
-        availableTranslatedLanguage: z.array(z.string()).optional(),
-        contentRating: z.array(contentRatingEnum).optional(),
-        order: z
-          .object({
-            latestUploadedChapter: orderEnum.optional(),
-            followedCount: orderEnum.optional(),
-            rating: orderEnum.optional(),
-            createdAt: orderEnum.optional(),
-          })
-          .optional(),
-        includes: z.array(includesEnum).optional(),
-        hasAvailableChapters: z.enum(["0", "1", "true", "false"]).optional(),
-        createdAtSince: z.string().optional(),
+        translatedLanguage: z.array(z.string()).optional(),
+        order: z.record(z.string(), z.string()).optional(),
       }),
     )
     .query(async ({ input }) => {
-      const qs = new URLSearchParams();
-      Object.entries(input).forEach(([key, value]) => {
-        if (value !== undefined) {
-          if (Array.isArray(value)) {
-            value.forEach((v) => qs.append(key + "[]", String(v)));
-          } else if (typeof value === "object") {
-            qs.append(key, JSON.stringify(value));
-          } else {
-            qs.append(key, String(value));
-          }
-        }
-      });
-
-      const response = await mangadexFetch(`/manga?${qs}`);
-      return response;
+      const { mangaId, ...options } = input;
+      try {
+        const response = await MangadexApi.Manga.getMangaIdFeed(
+          mangaId,
+          options,
+        );
+        return response.data;
+      } catch (error) {
+        throw new Error("Failed to fetch manga chapters");
+      }
     }),
+
+  // Get manga tags
+  getTags: publicProcedure.query(async () => {
+    try {
+      const response = await MangadexApi.Manga.getMangaTag();
+      return response.data;
+    } catch (error) {
+      throw new Error("Failed to fetch manga tags");
+    }
+  }),
 });

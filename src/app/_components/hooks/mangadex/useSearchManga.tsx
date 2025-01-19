@@ -2,54 +2,42 @@
 
 import { useMemo } from "react";
 import { api } from "~/trpc/react";
-import { ExtendManga } from "~/app/_components/types/mangadex";
+import { ExtendManga, MangaList } from "~/app/_components/types/mangadex";
 import { Utils } from "~/app/_components/utils";
-import type * as Mangadex from "~/api/mangadex";
-import { MangadexApi } from "../../../../../src/api";
-
-function transformOptions(
-  options: Mangadex.Manga.GetSearchMangaRequestOptions,
-) {
-  return {
-    ...options,
-    includes: options.includes as (
-      | Mangadex.Static.Includes.MANGA
-      | Mangadex.Static.Includes.COVER_ART
-      | Mangadex.Static.Includes.AUTHOR
-      | Mangadex.Static.Includes.ARTIST
-    )[],
-    order: options.order && {
-      latestUploadedChapter: options.order
-        .latestUploadedChapter as Mangadex.Static.Order.DESC,
-      followedCount: options.order.followedCount as Mangadex.Static.Order.DESC,
-    },
-  };
-}
+import { type GetSearchMangaRequestOptions } from "~/api/mangadex/manga";
+import { Includes } from "~/api/mangadex/static";
 
 export default function useSearchManga(
-  options: Mangadex.Manga.GetSearchMangaRequestOptions,
-  { enable }: { enable: boolean } = { enable: true },
+  options: Omit<GetSearchMangaRequestOptions, "offset">,
+  { enable = true }: { enable?: boolean } = {},
 ) {
-  // avoid invalid vietnamese characters
+  // Avoid invalid Vietnamese characters
   if (options.title) {
     options.title = encodeURIComponent(options.title);
   }
   if (!options.includes) {
-    options.includes = [MangadexApi.Static.Includes.COVER_ART];
-  }
-  if (options.offset && options.offset > 10000) {
-    options.offset = 10000 - (options.limit || 10);
+    options.includes = [Includes.COVER_ART];
   }
 
-  const { data, error, isLoading } = api.mangadex.searchManga.useQuery<any>(
-    transformOptions(options),
-    { enabled: enable },
+  // Narrow the type of includes to match the expected type
+  const includes = options.includes as (
+    | Includes.MANGA
+    | Includes.COVER_ART
+    | Includes.AUTHOR
+    | Includes.ARTIST
+  )[];
+
+  const { data, error, isLoading } = api.mangadex.getSearchManga.useQuery(
+    { ...options, includes }, // Spread and use narrowed includes
+    {
+      enabled: enable,
+    },
   );
 
   const mangaList = useMemo(() => {
-    if (data?.result === "ok") {
+    if (data?.data) {
       return data.data.map(
-        (m: any) => Utils.Mangadex.extendRelationship(m) as ExtendManga,
+        (m) => Utils.Mangadex.extendRelationship(m) as ExtendManga,
       );
     }
     return [];

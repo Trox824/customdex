@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FaClock } from "react-icons/fa";
+import useManga from "~/app/_components/hooks/mangadex/useManga";
 import { useMangadex } from "~/app/_components/contexts/mangadex";
 import { DataLoader } from "~/app/_components/DataLoader";
 import { Utils } from "~/app/_components/utils";
@@ -11,8 +12,6 @@ import Pagination from "../Pagination";
 import { Skeleton } from "~/app/_components/shadcn/skeleton";
 import { MangaHoverCard } from "~/app/_components/nettrom/MangaHoverCard";
 import { BsGrid, BsGrid3X3, BsListUl } from "react-icons/bs";
-import { api } from "~/trpc/react";
-import { MangadexApi } from "~/api";
 
 interface MangaTileProps {
   id: string;
@@ -153,47 +152,13 @@ export default function NewUpdates({ title }: { title?: string }) {
   const page = Number(params?.get("page")) ?? 0;
   const [totalPage, setTotalPage] = useState(0);
   const { history } = useReadingHistory();
-  const [layout, setLayout] = useState<"grid" | "large" | "table">("grid");
+  const { mangas, total, isLoading, error } = useManga({ page });
   const { updateMangaStatistics } = useMangadex();
-
-  const { data, isLoading, error } = api.mangadex.getSearchManga.useQuery<any>({
-    limit: 32,
-    offset: page * 32,
-    availableTranslatedLanguage: ["vi"],
-    contentRating: [
-      MangadexApi.Static.MangaContentRating.SAFE,
-      MangadexApi.Static.MangaContentRating.SUGGESTIVE,
-      MangadexApi.Static.MangaContentRating.EROTICA,
-      MangadexApi.Static.MangaContentRating.PORNOGRAPHIC,
-    ],
-    order: { latestUploadedChapter: MangadexApi.Static.Order.DESC },
-    includes: [MangadexApi.Static.Includes.COVER_ART],
-    hasAvailableChapters: "1",
-  });
-
-  const mangas =
-    data?.data?.map((manga: any) => {
-      const relationships = manga.relationships || [];
-      const coverArtRel = relationships.find(
-        (rel: any) => rel.type === "cover_art",
-      );
-      const fileName = coverArtRel?.attributes?.fileName;
-      const coverUrl = fileName
-        ? `https://uploads.mangadex.org/covers/${manga.id}/${fileName}`
-        : null;
-
-      return {
-        ...manga,
-        coverFileName: fileName,
-        coverUrl,
-      };
-    }) || [];
+  const [layout, setLayout] = useState<"grid" | "large" | "table">("grid");
 
   useEffect(() => {
     if (!mangas?.length) return;
-    const ids = mangas
-      .filter((manga: any) => manga?.id)
-      .map((manga: any) => manga.id);
+    const ids = mangas.filter((manga) => manga?.id).map((manga) => manga.id);
 
     if (ids.length > 0) {
       updateMangaStatistics({ manga: ids });
@@ -201,11 +166,10 @@ export default function NewUpdates({ title }: { title?: string }) {
   }, [mangas, updateMangaStatistics]);
 
   useEffect(() => {
-    if (!data?.total) return;
+    if (!total) return;
     const limit = 30;
-    setTotalPage(Math.ceil(data.total / limit));
-  }, [data?.total]);
-
+    setTotalPage(Math.ceil(total / limit));
+  }, [total]);
   return (
     <div className="Module Module-163" id="new-updates">
       <div className="ModuleContent">
@@ -233,7 +197,7 @@ export default function NewUpdates({ title }: { title?: string }) {
                     }`
               }`}
             >
-              {mangas.map((manga: any) => (
+              {mangas.map((manga) => (
                 <div
                   key={manga.id}
                   className={`${
