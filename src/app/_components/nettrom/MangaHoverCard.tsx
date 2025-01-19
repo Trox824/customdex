@@ -35,7 +35,7 @@ export const MangaHoverCard: React.FC<MangaHoverCardProps> = ({
 }) => {
   const { mangas } = useMangadex();
 
-  const { data: chapterData } = api.chapter.getChapterList.useQuery({
+  const { data: chapterData } = api.chapter.getChapterList.useQuery<any>({
     limit: 5,
     offset: 0,
     manga: id,

@@ -29,7 +29,7 @@ export default function TopTitles({ groupId }: { groupId?: string }) {
   useEffect(() => {
     if (mangaList.length > 0) {
       addMangas(mangaList);
-      updateMangaStatistics({ manga: mangaList.map((m) => m.id) });
+      updateMangaStatistics({ manga: mangaList.map((m: any) => m.id) });
     }
   }, [mangaList]);
 
@@ -70,7 +70,7 @@ export default function TopTitles({ groupId }: { groupId?: string }) {
           <div className="tab-pane">
             <div id="topMonth">
               <ul className="list-unstyled">
-                {mangaList.map((manga, index) => {
+                {mangaList.map((manga: any, index: number) => {
                   const title = Utils.Mangadex.getMangaTitle(manga);
                   return (
                     <li className="clearfix" key={manga.id}>

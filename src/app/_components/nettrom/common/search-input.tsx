@@ -115,7 +115,7 @@ export default function SearchInput() {
                 </div>
               ) : mangaList.length > 0 ? (
                 <div className="divide-y divide-gray-100">
-                  {mangaList.map((manga) => {
+                  {mangaList.map((manga: any) => {
                     const title = Utils.Mangadex.getMangaTitle(manga);
                     const altTitles = Utils.Mangadex.getMangaAltTitles(manga);
                     const cover = Utils.Mangadex.getCoverArt(manga);

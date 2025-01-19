@@ -30,7 +30,7 @@ export default function MangaResults() {
   useEffect(() => {
     if (mangaList.length > 0) {
       addMangas(mangaList);
-      updateMangaStatistics({ manga: mangaList.map((m) => m.id) });
+      updateMangaStatistics({ manga: mangaList.map((m: any) => m.id) });
     }
   }, [mangaList, addMangas, updateMangaStatistics]);
 
@@ -44,7 +44,7 @@ export default function MangaResults() {
       <div className="ModuleContent">
         <div className="items">
           <div className="grid grid-cols-2 gap-[20px] lg:grid-cols-4">
-            {mangaList.map((manga) => {
+            {mangaList.map((manga: any) => {
               const mangaId = manga.id;
 
               return (
@@ -55,7 +55,7 @@ export default function MangaResults() {
                         <h3 className="mb-2 line-clamp-2 text-[14px] font-semibold leading-tight text-white transition group-hover:line-clamp-4">
                           {Utils.Mangadex.getMangaTitle(manga)}
                         </h3>
-                        <span className="text-muted-foreground flex items-center justify-between gap-[4px] text-[11px]">
+                        <span className="flex items-center justify-between gap-[4px] text-[11px] text-muted-foreground">
                           <span className="flex items-center gap-[4px]">
                             <i className="fa fa-star"></i>
                             {Utils.Number.formatViews(

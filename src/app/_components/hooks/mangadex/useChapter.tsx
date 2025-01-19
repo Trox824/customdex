@@ -5,7 +5,7 @@ import { Utils } from "~/app/_components/utils";
 import { MangadexApi } from "~/api";
 
 export default function useChapter(chapterId: string | null) {
-  const { data, isLoading, error } = api.chapter.getChapterById.useQuery(
+  const { data, isLoading, error } = api.chapter.getChapterById.useQuery<any>(
     {
       id: chapterId!,
       includes: [MangadexApi.Static.Includes.SCANLATION_GROUP],

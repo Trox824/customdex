@@ -176,14 +176,14 @@ export default function TopTitles({ groupId }: { groupId?: string }) {
   useEffect(() => {
     if (topMangaList.length > 0) {
       addMangas(topMangaList);
-      updateMangaStatistics({ manga: topMangaList.map((m) => m.id) });
+      updateMangaStatistics({ manga: topMangaList.map((m: any) => m.id) });
     }
   }, [topMangaList]);
 
   useEffect(() => {
     if (favoriteMangaList.length > 0) {
       addMangas(favoriteMangaList);
-      updateMangaStatistics({ manga: favoriteMangaList.map((m) => m.id) });
+      updateMangaStatistics({ manga: favoriteMangaList.map((m: any) => m.id) });
     }
   }, [favoriteMangaList]);
 
@@ -230,7 +230,7 @@ export default function TopTitles({ groupId }: { groupId?: string }) {
               >
                 <div className="h-[700px] overflow-y-auto">
                   <ul className="flex flex-col gap-4">
-                    {topMangaList.map((manga, index) => {
+                    {topMangaList.map((manga: any, index: number) => {
                       const title = Utils.Mangadex.getMangaTitle(manga);
                       return (
                         <MangaTile
@@ -256,7 +256,7 @@ export default function TopTitles({ groupId }: { groupId?: string }) {
               >
                 <div className="h-[700px] overflow-y-auto">
                   <ul className="flex flex-col gap-4">
-                    {favoriteMangaList.map((manga, index) => {
+                    {favoriteMangaList.map((manga: any, index: number) => {
                       const title = Utils.Mangadex.getMangaTitle(manga);
                       return (
                         <MangaTile
@@ -287,7 +287,7 @@ export default function TopTitles({ groupId }: { groupId?: string }) {
               >
                 <div className="h-[700px] overflow-y-auto">
                   <ul className="flex flex-col gap-4">
-                    {newMangaList.map((manga, index) => {
+                    {newMangaList.map((manga: any, index: number) => {
                       const title = Utils.Mangadex.getMangaTitle(manga);
                       return (
                         <MangaTile

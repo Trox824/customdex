@@ -21,7 +21,7 @@ export default function useManga(
   const { page = 0, limit = 32 } = options;
   const offset = page * limit;
 
-  const { data, error, isLoading } = api.mangadex.getSearchManga.useQuery({
+  const { data, error, isLoading } = api.mangadex.getSearchManga.useQuery<any>({
     limit,
     offset,
     availableTranslatedLanguage: ["vi"],

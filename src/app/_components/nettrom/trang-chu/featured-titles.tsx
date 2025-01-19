@@ -16,7 +16,7 @@ import { Utils } from "~/app/_components/utils";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Skeleton } from "~/app/_components/shadcn/skeleton";
-
+import { Manga } from "~/app/_components/types/mangadex";
 export default function FeaturedTitles() {
   const { mangaList: featuredTitles, isLoading, error } = useFeaturedTitles();
   const { addMangas } = useMangadex();
@@ -98,7 +98,7 @@ export default function FeaturedTitles() {
             loop
             className="featured-titles-swiper"
           >
-            {featuredTitles.map((manga) => {
+            {featuredTitles.map((manga: Manga) => {
               const title = Utils.Mangadex.getMangaTitle(manga);
               return (
                 <SwiperSlide key={manga.id}>
@@ -129,7 +129,8 @@ export default function FeaturedTitles() {
                           href={Constants.Routes.nettrom.manga(manga.id)}
                           className="text-web-title hover:text-web-titleLighter text-white transition"
                         >
-                          {manga.author?.attributes?.name || ""}
+                          {manga.relationships.find((r) => r.type === "author")
+                            ?.attributes?.name || ""}
                         </Link>
                         <p className="time mb-0 mt-1 flex h-0 items-center gap-2 overflow-hidden text-[12px] text-muted-foreground group-hover:h-auto">
                           <FaClock />{" "}

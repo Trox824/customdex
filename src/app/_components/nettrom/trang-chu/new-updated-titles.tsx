@@ -156,7 +156,7 @@ export default function NewUpdates({ title }: { title?: string }) {
   const [layout, setLayout] = useState<"grid" | "large" | "table">("grid");
   const { updateMangaStatistics } = useMangadex();
 
-  const { data, isLoading, error } = api.mangadex.getSearchManga.useQuery({
+  const { data, isLoading, error } = api.mangadex.getSearchManga.useQuery<any>({
     limit: 32,
     offset: page * 32,
     availableTranslatedLanguage: ["vi"],
@@ -191,7 +191,9 @@ export default function NewUpdates({ title }: { title?: string }) {
 
   useEffect(() => {
     if (!mangas?.length) return;
-    const ids = mangas.filter((manga) => manga?.id).map((manga) => manga.id);
+    const ids = mangas
+      .filter((manga: any) => manga?.id)
+      .map((manga: any) => manga.id);
 
     if (ids.length > 0) {
       updateMangaStatistics({ manga: ids });
@@ -231,7 +233,7 @@ export default function NewUpdates({ title }: { title?: string }) {
                     }`
               }`}
             >
-              {mangas.map((manga) => (
+              {mangas.map((manga: any) => (
                 <div
                   key={manga.id}
                   className={`${

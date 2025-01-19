@@ -41,7 +41,7 @@ export default function useSearchManga(
     options.offset = 10000 - (options.limit || 10);
   }
 
-  const { data, error, isLoading } = api.mangadex.searchManga.useQuery(
+  const { data, error, isLoading } = api.mangadex.searchManga.useQuery<any>(
     transformOptions(options),
     { enabled: enable },
   );
@@ -49,7 +49,7 @@ export default function useSearchManga(
   const mangaList = useMemo(() => {
     if (data?.result === "ok") {
       return data.data.map(
-        (m) => Utils.Mangadex.extendRelationship(m) as ExtendManga,
+        (m: any) => Utils.Mangadex.extendRelationship(m) as ExtendManga,
       );
     }
     return [];
