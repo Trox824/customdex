@@ -10,36 +10,43 @@ const includesEnum = z.enum([
   Mangadex.Static.Includes.USER,
 ]);
 
-// Import or copy the formatQueryParams function from mangadex.ts
-const formatQueryParams = (input: any) => {
+// A helper to format query params
+function formatQueryParams(input: Record<string, unknown>) {
   const params = new URLSearchParams();
 
   Object.entries(input).forEach(([key, value]) => {
-    if (value === undefined || value === null) return;
+    if (value == null) return;
 
-    if (key === "order" && typeof value === "object") {
-      // Handle order object specially
-      Object.entries(value).forEach(([orderKey, orderValue]) => {
-        params.append(`order[${orderKey}]`, String(orderValue));
+    // Handle order object specially
+    if (key === "order" && typeof value === "object" && !Array.isArray(value)) {
+      Object.entries(value as Record<string, unknown>).forEach(
+        ([orderKey, orderValue]) => {
+          if (orderValue != null) {
+            params.append(`order[${orderKey}]`, JSON.stringify(orderValue));
+          }
+        },
+      );
+    }
+    // Handle arrays
+    else if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item != null) {
+          params.append(`${key}[]`, JSON.stringify(item));
+        }
       });
-    } else if (Array.isArray(value)) {
-      // Handle arrays
-      value.forEach((v) => {
-        params.append(`${key}[]`, String(v));
-      });
-    } else if (typeof value === "object") {
-      // Handle other objects
-      Object.entries(value).forEach(([objKey, objValue]) => {
-        params.append(`${key}[${objKey}]`, String(objValue));
-      });
-    } else {
-      // Handle primitive values
-      params.append(key, String(value));
+    }
+    // Handle objects
+    else if (typeof value === "object") {
+      params.append(key, JSON.stringify(value));
+    }
+    // Handle primitives
+    else {
+      params.append(key, JSON.stringify(value));
     }
   });
 
   return params;
-};
+}
 
 const mangadexFetch = async (endpoint: string, options: any = {}) => {
   const baseUrl = "https://api.mangadex.org";
@@ -53,7 +60,12 @@ const mangadexFetch = async (endpoint: string, options: any = {}) => {
   });
 
   if (!response.ok) {
-    throw new Error(`MangaDex API error: ${response.statusText}`);
+    const error = await response.json().catch(() => null);
+    throw new Error(
+      `MangaDex API error: ${response.statusText}${
+        error ? ` - ${JSON.stringify(error)}` : ""
+      }`,
+    );
   }
 
   return response.json();
@@ -64,16 +76,13 @@ export const chapterRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        includes: z.array(z.string()).optional(),
+        // use includesEnum here
+        includes: z.array(includesEnum).optional(),
       }),
     )
     .query(async ({ input }) => {
-      const qs = new URLSearchParams();
-      if (input.includes) {
-        input.includes.forEach((include) => qs.append("includes[]", include));
-      }
-
-      const response = await mangadexFetch(`/chapter/${input.id}?${qs}`);
+      const params = formatQueryParams(input);
+      const response = await mangadexFetch(`/chapter/${input.id}?${params}`);
       return response;
     }),
 
@@ -89,15 +98,8 @@ export const chapterRouter = createTRPCRouter({
         volume: z.string().optional(),
         chapter: z.string().optional(),
         translatedLanguage: z.array(z.string()).optional(),
-        includes: z
-          .array(
-            z.enum([
-              Mangadex.Static.Includes.SCANLATION_GROUP,
-              Mangadex.Static.Includes.MANGA,
-              Mangadex.Static.Includes.USER,
-            ]),
-          )
-          .optional(),
+        // use includesEnum here too
+        includes: z.array(includesEnum).optional(),
       }),
     )
     .query(async ({ input }) => {

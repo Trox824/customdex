@@ -21,35 +21,42 @@ const includesEnum = z.enum([
 const orderEnum = z.enum([Mangadex.Static.Order.DESC]);
 
 // Helper function to properly format query parameters for MangaDex API
-const formatQueryParams = (input: any) => {
+function formatQueryParams(input: Record<string, unknown>) {
   const params = new URLSearchParams();
 
   Object.entries(input).forEach(([key, value]) => {
-    if (value === undefined || value === null) return;
+    if (value == null) return;
 
-    if (key === "order" && typeof value === "object") {
-      // Handle order object specially
-      Object.entries(value).forEach(([orderKey, orderValue]) => {
-        params.append(`order[${orderKey}]`, String(orderValue));
+    // Handle order object specially
+    if (key === "order" && typeof value === "object" && !Array.isArray(value)) {
+      Object.entries(value as Record<string, unknown>).forEach(
+        ([orderKey, orderValue]) => {
+          if (orderValue != null) {
+            params.append(`order[${orderKey}]`, JSON.stringify(orderValue));
+          }
+        },
+      );
+    }
+    // Handle arrays
+    else if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item != null) {
+          params.append(`${key}[]`, JSON.stringify(item));
+        }
       });
-    } else if (Array.isArray(value)) {
-      // Handle arrays
-      value.forEach((v) => {
-        params.append(`${key}[]`, String(v));
-      });
-    } else if (typeof value === "object") {
-      // Handle other objects
-      Object.entries(value).forEach(([objKey, objValue]) => {
-        params.append(`${key}[${objKey}]`, String(objValue));
-      });
-    } else {
-      // Handle primitive values
-      params.append(key, String(value));
+    }
+    // Handle objects
+    else if (typeof value === "object") {
+      params.append(key, JSON.stringify(value));
+    }
+    // Handle primitives
+    else {
+      params.append(key, JSON.stringify(value));
     }
   });
 
   return params;
-};
+}
 
 const mangadexFetch = async (endpoint: string, options: any = {}) => {
   const baseUrl = "https://api.mangadex.org";
