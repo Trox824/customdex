@@ -65,7 +65,7 @@ export const ChapterControlBar: FC<{}> = (props) => {
           ></Button>
           <Select
             classNames={{
-              trigger: "h-16 grow rounded-lg",
+              trigger: "h-16 grow rounded-lg text-white",
               content: "max-h-[500px] w-[95vw] sm:w-full",
             }}
             value={chapterId || "Đang tải..."}
@@ -97,73 +97,6 @@ export const ChapterControlBar: FC<{}> = (props) => {
             icon={<FaEllipsisV />}
           ></Button>
         </div>
-        {/* <div className="flex items-center justify-center gap-x-1">
-          <Link className="home hidden md:block" href="/" title="Trang chủ">
-            <i className="fa fa-home" />
-          </Link>
-          <Link
-            className="home backward hidden md:block"
-            href={`${Constants.Routes.nettrom.manga(manga?.id || "")}#nt_listchapter`}
-            title={mangaTitle}
-          >
-            <i className="fa fa-list" />
-          </Link>
-          {shouldFloat && (
-            <a
-              className="home changeserver"
-              href="#"
-              title="Lên trên cùng"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            >
-              <i className="fa fa-arrow-circle-up" />
-            </a>
-          )}
-        </div>
-        <div className="flex items-center justify-center gap-x-1">
-          <a
-            className={`prev a_prev ${canPrev ? "" : "disabled"}`}
-            onClick={() => prev()}
-          >
-            <i className="fa fa-chevron-left" />
-          </a>
-          <select
-            name="ctl00$mainContent$ddlSelectChapter"
-            id="ctl00_mainContent_ddlSelectChapter"
-            className="select-chapter min-w-[100px] md:min-w-[200px]"
-            value={chapterId || "Đang tải..."}
-            onChange={(event) => {
-              goTo(event.target.value);
-            }}
-          >
-            {chapters.length > 0 ? (
-              chapters.map((item) => (
-                <option value={item.id} key={item.id}>
-                  {item.volume !== "none"
-                    ? `Tập ${item.volume} Chương ${item.chapter}`
-                    : item.chapter !== "none"
-                      ? `Chương ${item.chapter}`
-                      : "Oneshot"}
-                </option>
-              ))
-            ) : (
-              <option>Đang tải...</option>
-            )}
-          </select>
-          <a
-            className={`next a_next ${canNext ? "" : "disabled"}`}
-            onClick={() => next()}
-          >
-            <i className="fa fa-chevron-right" />
-          </a>
-        </div>
-        <a
-          className="follow-link btn btn-success"
-          href={Constants.Routes.nettrom.scanlationGroup(
-            chapter?.scanlation_group?.id || "",
-          )}
-        >
-          <i className="fa fa-heart" /> <span>Nhóm dịch</span>
-        </a> */}
       </div>
     </>
   );

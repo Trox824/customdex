@@ -60,7 +60,7 @@ export default function SearchInput() {
   };
 
   return (
-    <div ref={searchRef} className="relative w-full max-w-[600px]">
+    <div ref={searchRef} className="relative w-full max-w-[500px]">
       <form onSubmit={handleSubmit} className="relative">
         <motion.div
           className={`flex items-center rounded-xl border bg-white p-2 transition-all duration-200 ${

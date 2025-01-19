@@ -20,7 +20,7 @@ import { Skeleton } from "~/app/_components/shadcn/skeleton";
 export default function FeaturedTitles() {
   const { mangaList: featuredTitles, isLoading, error } = useFeaturedTitles();
   const { addMangas } = useMangadex();
-
+  console.log(featuredTitles);
   useEffect(() => {
     if (featuredTitles.length > 0) addMangas(featuredTitles);
   }, [featuredTitles, addMangas]);

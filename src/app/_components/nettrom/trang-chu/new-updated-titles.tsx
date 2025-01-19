@@ -1,194 +1,81 @@
 "use client";
-
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { twMerge } from "tailwind-merge";
-
-import { useLastUpdates } from "~/app/_components/hooks/mangadex";
-import { useMangadex } from "~/app/_components/contexts/mangadex";
-
-import { ExtendChapter } from "~/app/_components/types/mangadex";
-import { Constants } from "~/app/constants";
 import { FaClock } from "react-icons/fa";
-import { AspectRatio } from "~/app/_components/shadcn/aspect-ratio";
+import useManga from "~/app/_components/hooks/mangadex/useManga";
+import { useMangadex } from "~/app/_components/contexts/mangadex";
 import { DataLoader } from "~/app/_components/DataLoader";
 import { Utils } from "~/app/_components/utils";
 import useReadingHistory from "~/app/_components/hooks/useReadingHistory";
 import { ReadingHistory } from "~/app/_components/types";
 import Pagination from "../Pagination";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "~/app/_components/shadcn/hover-card";
 import { Skeleton } from "~/app/_components/shadcn/skeleton";
+import { MangaHoverCard } from "~/app/_components/nettrom/MangaHoverCard";
+import { BsGrid, BsGrid3X3, BsListUl } from "react-icons/bs";
 
-const MangaTile = (props: {
+interface MangaTileProps {
   id: string;
   title: string;
   thumbnail: string;
-  chapters: ExtendChapter[];
+  chapters: any[];
   readedChapters: ReadingHistory;
-}) => {
-  const { mangaStatistics, mangas } = useMangadex();
-  const readedChaptersId = props.readedChapters?.chapterId ?? null;
-  const [showFullDescription, setShowFullDescription] = useState(false);
+  description: string;
+  tags: any[];
+  className?: string;
+}
+
+const MangaTile = ({
+  id,
+  title,
+  thumbnail,
+  description,
+  tags,
+  className,
+}: MangaTileProps) => {
+  const { mangaStatistics } = useMangadex();
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const stats = mangaStatistics[id];
+  const renderStats = () => (
+    <span className="flex items-center justify-between gap-[4px] text-[11px] text-muted-foreground">
+      <span className="flex items-center gap-[4px]">
+        <i className="fa fa-star"></i>
+        {Utils.Number.formatViews(
+          Math.round((stats?.rating?.bayesian || 0) * 10) / 10,
+        )}
+      </span>
+      <span className="flex items-center gap-[4px]">
+        <i className="fa fa-comment" />
+        {Utils.Number.formatViews(stats?.comments?.repliesCount || 0)}
+      </span>
+      <span className="flex items-center gap-[4px]">
+        <i className="fa fa-heart" />
+        {Utils.Number.formatViews(stats?.follows || 0)}
+      </span>
+    </span>
+  );
 
   return (
     <div className="group">
       <figure className="clearfix">
         <div className="relative mb-2">
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <Link
-                title={props.title}
-                href={Constants.Routes.nettrom.manga(props.id)}
-              >
-                <AspectRatio
-                  ratio={Constants.Nettrom.MANGA_COVER_RATIO}
-                  className="overflow-hidden rounded-lg group-hover:shadow-lg"
-                >
-                  <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-neutral-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
-                  <img
-                    src={props.thumbnail}
-                    className="lazy h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
-                    data-original={props.thumbnail}
-                    alt={props.title}
-                  />
-                </AspectRatio>
-              </Link>
-            </HoverCardTrigger>
-            <HoverCardContent
-              className="w-[500px] rounded-lg border-border bg-background p-6"
-              side="right"
-            >
-              <div className="flex">
-                <div className="w-[200px] flex-none">
-                  <img
-                    className="h-[250px] w-full rounded object-cover"
-                    src={props.thumbnail}
-                    alt={props.title}
-                  />
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Total: {mangas[props.id]?.attributes.lastChapter || "??"}
-                  </div>
-                </div>
-                <div className="ml-6 max-h-[250px] flex-1 space-y-6 overflow-y-auto">
-                  <h3 className="line-clamp-2 text-2xl font-semibold text-foreground">
-                    {props.title}
-                  </h3>
-                  <p className="text-lg text-muted-foreground">
-                    {Utils.Mangadex.getOriginalMangaTitle(mangas[props.id])}
-                  </p>
-                  {mangas[props.id]?.attributes.description?.en && (
-                    <div className="border-b border-muted-foreground pb-2">
-                      <p className="inline text-lg text-foreground">
-                        {showFullDescription
-                          ? mangas[props.id]?.attributes.description?.en ||
-                            "No description available"
-                          : `${mangas[props.id]?.attributes.description?.en?.slice(0, 150) || "No description available"}... `}
-                        <button
-                          className="ml-1 inline-flex text-base text-blue-500 hover:underline"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setShowFullDescription(!showFullDescription);
-                          }}
-                        >
-                          {showFullDescription ? "Ẩn bớt" : "Xem thêm"}
-                        </button>
-                      </p>
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-medium text-foreground">
-                      Chapters
-                    </h4>
-                    <ul className="space-y-1">
-                      {props.chapters.map((chapter) => (
-                        <li key={chapter.id} className="text-lg">
-                          <Link
-                            href={Constants.Routes.nettrom.chapter(chapter.id)}
-                            className={twMerge(
-                              "transition hover:text-primary",
-                              readedChaptersId === chapter.id
-                                ? "text-muted-foreground"
-                                : "text-foreground",
-                            )}
-                          >
-                            {Utils.Mangadex.getChapterTitle(chapter)}
-                            <span className="ml-2 text-sm text-muted-foreground">
-                              {Utils.Date.formatNowDistance(
-                                new Date(chapter.attributes.readableAt),
-                              )}
-                            </span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </HoverCardContent>
-          </HoverCard>
+          <MangaHoverCard
+            id={id}
+            title={title}
+            thumbnail={thumbnail}
+            tags={tags}
+            readedChaptersId={null}
+            showFullDescription={isDescriptionExpanded}
+            description={description}
+            setShowFullDescription={setIsDescriptionExpanded}
+          />
+
           <div className="absolute bottom-0 left-0 z-[2] w-full px-2 py-1.5">
             <h3 className="mb-2 line-clamp-2 text-[14px] font-semibold leading-tight text-white transition group-hover:line-clamp-4">
-              {props.title}
+              {title}
             </h3>
-            <span className="flex items-center justify-between gap-[4px] text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-[4px]">
-                <i className="fa fa-star"></i>
-                {Utils.Number.formatViews(
-                  Math.round(
-                    (mangaStatistics[props.id]?.rating?.bayesian || 0) * 10,
-                  ) / 10,
-                )}
-              </span>
-              <span className="flex items-center gap-[4px]">
-                <i className="fa fa-comment" />
-                {Utils.Number.formatViews(
-                  mangaStatistics[props.id]?.comments?.repliesCount || 0,
-                )}
-              </span>
-              <span className="flex items-center gap-[4px]">
-                <i className="fa fa-heart" />
-                {Utils.Number.formatViews(
-                  mangaStatistics[props.id]?.follows || 0,
-                )}
-              </span>
-            </span>
+            {renderStats()}
           </div>
         </div>
-        <figcaption>
-          <ul className="flex flex-col gap-[4px]">
-            {props.chapters.slice(0, 3).map((chapter) => (
-              <li
-                className="flex items-center justify-between gap-x-2 text-[12px]"
-                key={chapter.id}
-              >
-                <Link
-                  href={Constants.Routes.nettrom.chapter(chapter.id)}
-                  title={Utils.Mangadex.getChapterTitle(chapter)}
-                  className={
-                    readedChaptersId === chapter.id
-                      ? "text-web-titleDisabled hover:text-web-titleLighter flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition"
-                      : "text-web-title hover:text-web-titleLighter flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition"
-                  }
-                >
-                  {Utils.Mangadex.getChapterTitle(chapter)}
-                </Link>
-                <span className="whitespace-nowrap text-base leading-[13px] text-muted-foreground">
-                  {Utils.Date.formatNowDistance(
-                    new Date(chapter.attributes.readableAt),
-                  )
-                    .replace("khoảng", "")
-                    .replace("vài", "")
-                    .trim() + " trước"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </figcaption>
       </figure>
     </div>
   );
@@ -208,19 +95,6 @@ const NewUpdatesSkeleton = () => {
                 <Skeleton className="h-3 w-[60%]" />
                 <Skeleton className="h-3 w-8" />
               </div>
-              <div className="space-y-1.5">
-                {Array(3)
-                  .fill(0)
-                  .map((_, j) => (
-                    <div
-                      key={j}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <Skeleton className="h-3 w-[70%]" />
-                      <Skeleton className="h-3 w-[20%]" />
-                    </div>
-                  ))}
-              </div>
             </div>
           </div>
         ))}
@@ -228,98 +102,145 @@ const NewUpdatesSkeleton = () => {
   );
 };
 
-export default function NewUpdates({
-  title,
-  groupId,
+const LayoutToggle = ({
+  layout,
+  setLayout,
 }: {
-  title?: string;
-  groupId?: string;
-}) {
+  layout: "grid" | "large" | "table";
+  setLayout: (layout: "grid" | "large" | "table") => void;
+}) => {
+  return (
+    <div className="inline-flex rounded-lg bg-secondary p-1">
+      <button
+        onClick={() => setLayout("large")}
+        className={`rounded-md px-3 py-1.5 text-sm transition-all ${
+          layout === "large"
+            ? "bg-white text-black shadow"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        <BsGrid className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => setLayout("grid")}
+        className={`rounded-md px-3 py-1.5 text-sm transition-all ${
+          layout === "grid"
+            ? "bg-white text-black shadow"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        <BsGrid3X3 className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => setLayout("table")}
+        className={`rounded-md px-3 py-1.5 text-sm transition-all ${
+          layout === "table"
+            ? "bg-white text-black shadow"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        <BsListUl className="h-4 w-4" />
+      </button>
+    </div>
+  );
+};
+
+export default function NewUpdates({ title }: { title?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const page = Number(params?.get("page")) ?? 0;
   const [totalPage, setTotalPage] = useState(0);
   const { history } = useReadingHistory();
-  const { chapters, isLoading, error, total } = useLastUpdates({
-    page,
-    groupId,
-  });
-  const { mangas, updateMangas, updateMangaStatistics } = useMangadex();
-  const updates: Record<string, ExtendChapter[]> = {};
-
-  if (chapters) {
-    for (const chapter of chapters) {
-      const mangaId = chapter.manga?.id;
-      if (!mangaId) continue;
-      if (!updates[mangaId]) {
-        updates[mangaId] = [];
-      }
-      updates[mangaId].push(chapter);
-    }
-  }
+  const { mangas, total, isLoading, error } = useManga({ page });
+  const { updateMangaStatistics } = useMangadex();
+  const [layout, setLayout] = useState<"grid" | "large" | "table">("grid");
 
   useEffect(() => {
-    if (chapters?.length > 0) {
-      updateMangas({
-        ids: chapters.filter((c) => !!c?.manga?.id).map((c) => c.manga!.id),
-      });
-    }
-  }, [chapters]);
+    if (!mangas?.length) return;
+    const ids = mangas.filter((manga) => manga?.id).map((manga) => manga.id);
 
-  useEffect(() => {
-    if (chapters?.length > 0) {
-      updateMangaStatistics({
-        manga: chapters.filter((c) => !!c?.manga?.id).map((c) => c.manga!.id!),
-      });
+    if (ids.length > 0) {
+      updateMangaStatistics({ manga: ids });
     }
-  }, [chapters]);
+  }, [mangas, updateMangaStatistics]);
 
   useEffect(() => {
     if (!total) return;
-    setTotalPage(Math.ceil(total / Constants.Mangadex.LAST_UPDATES_LIMIT));
+    const limit = 30;
+    setTotalPage(Math.ceil(total / limit));
   }, [total]);
-
   return (
     <div className="Module Module-163" id="new-updates">
       <div className="ModuleContent">
         <div className="items">
-          <div className="relative">
-            <h1 className="my-0 mb-5 flex items-center gap-3 text-[20px] text-[#2980b9]">
+          <div className="relative mb-5 flex items-center justify-between">
+            <h1 className="my-0 flex items-center gap-3 text-[20px] text-[#2980b9]">
               <FaClock />
               <span>{title ?? "Truyện mới cập nhật"}</span>
             </h1>
-            {/* <Link
-              className="filter-icon"
-              title="Tìm truyện nâng cao"
-              href={routes.nettrom.search}
-            >
-              <i className="fa fa-filter"></i>
-            </Link> */}
+            <LayoutToggle layout={layout} setLayout={setLayout} />
           </div>
           <DataLoader
             isLoading={isLoading}
             error={error}
             skeleton={<NewUpdatesSkeleton />}
           >
-            <div className={`grid grid-cols-2 gap-[20px] lg:grid-cols-4`}>
-              {Object.entries(updates).map(([mangaId, chapterList]) => {
-                const coverArt = Utils.Mangadex.getCoverArt(mangas[mangaId]);
-                const mangaTitle = Utils.Mangadex.getMangaTitle(
-                  mangas[mangaId],
-                );
-                const readedChapters = history[mangaId];
-                return (
-                  <MangaTile
-                    id={mangaId}
-                    key={mangaId}
-                    thumbnail={coverArt}
-                    title={mangaTitle}
-                    chapters={chapterList}
-                    readedChapters={readedChapters as ReadingHistory}
-                  />
-                );
-              })}
+            <div
+              className={`${
+                layout === "table"
+                  ? "divide-y divide-gray-200 border-b border-t border-gray-200"
+                  : `grid gap-[20px] ${
+                      layout === "grid"
+                        ? "grid-cols-2 lg:grid-cols-4"
+                        : "grid-cols-1 lg:grid-cols-2"
+                    }`
+              }`}
+            >
+              {mangas.map((manga) => (
+                <div
+                  key={manga.id}
+                  className={`${
+                    layout === "table"
+                      ? "flex items-center gap-4 py-4 transition-colors hover:bg-gray-50"
+                      : ""
+                  }`}
+                >
+                  {layout === "table" ? (
+                    <>
+                      <div className="h-40 w-32 flex-shrink-0">
+                        <img
+                          src={manga.coverUrl}
+                          alt={manga.attributes.title.en}
+                          className="h-full w-full rounded object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 max-w-[600px] flex-grow">
+                        <h3 className="text-2xl font-medium text-gray-900">
+                          {manga.attributes.title.en}
+                        </h3>
+                        <p className="text-xl text-gray-500">
+                          Latest chapter • Updated {/* Add formatted date */}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <MangaTile
+                      id={manga.id}
+                      title={manga.attributes.title.en}
+                      thumbnail={manga.coverUrl}
+                      description={
+                        manga.attributes.description.vi ||
+                        manga.attributes.description.en
+                      }
+                      chapters={[]}
+                      tags={manga.attributes.tags}
+                      readedChapters={history[manga.id] as ReadingHistory}
+                      className={`transition-colors hover:bg-gray-100`}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           </DataLoader>
         </div>

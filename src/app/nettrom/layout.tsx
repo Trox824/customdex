@@ -55,7 +55,7 @@ export default function NettromLayout({
       <Suspense>
         <Header />
       </Suspense>
-      <nav className="hidden-xs mt-20" id="">
+      <nav className="hidden-xs" id="">
         <div className="mx-auto w-3/5">
           <div className="container">
             <div className="">

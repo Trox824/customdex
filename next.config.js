@@ -8,6 +8,15 @@ import "./src/env.js";
 const config = {
   images: {
     domains: ["mangadex.org"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "uploads.mangadex.org",
+        port: "",
+        pathname: "/covers/**",
+      },
+      // Add other patterns if necessary
+    ],
   },
 };
 

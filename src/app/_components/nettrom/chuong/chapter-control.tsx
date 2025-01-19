@@ -36,66 +36,19 @@ export default function ChapterControl() {
       error={null}
     >
       <div className="flex flex-col gap-0 text-center">
-        {/* <ul
-          className="mb-2 inline-flex items-center gap-4"
-          itemType="http://schema.org/BreadcrumbList"
-        >
-          {[
-            {
-              href: Constants.Routes.nettrom.index,
-              name: "Trang chủ",
-              position: 1,
-            },
-            {
-              href: Constants.Routes.nettrom.search,
-              name: "Truyện Tranh",
-              position: 2,
-            },
-          ].map((item, index, arr) => {
-            const isLast = index === arr.length - 1;
-            return (
-              <>
-                <li
-                  key={index}
-                  itemProp="itemListElement"
-                  itemType="http://schema.org/ListItem"
-                >
-                  <Link
-                    href={item.href}
-                    className="text-web-title transition hover:text-web-titleLighter"
-                  >
-                    <span itemProp="name">{item.name}</span>
-                  </Link>
-                  <meta
-                    itemProp="position"
-                    content={item.position.toString()}
-                  />
-                </li>
-                {!isLast && (
-                  <li
-                    className="text-muted-foreground"
-                    key={"divider_" + index}
-                  >
-                    /
-                  </li>
-                )}
-              </>
-            );
-          })}
-        </ul> */}
         <h1 className="mb-4 mt-0 text-center">
           <Link
-            className="text-web-title hover:text-web-titleLighter text-[16px] transition"
+            className="text-web-title hover:text-web-titleLighter mb-2 text-[20px] transition"
             href={Constants.Routes.nettrom.manga(manga?.id || "")}
           >
             {mangaTitle}
           </Link>{" "}
-          <p className="text-foreground my-0 text-[24px] leading-none">
+          <p className="my-0 text-[15px] leading-none text-foreground">
             {chapterTitle}{" "}
           </p>
         </h1>
         <p className="mb-5 text-center">
-          <span className="text-muted-foreground text-[14px]">
+          <span className="text-[14px] text-muted-foreground">
             <FaClock className="mr-2 inline" />
             Cập nhật lúc:{" "}
             <span className="">

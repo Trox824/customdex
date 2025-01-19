@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Iconify from "~/app/_components/iconify";
 import { Constants } from "~/app/constants";
 import SearchInput from "../common/search-input";
 import {
@@ -11,21 +10,13 @@ import {
   NavbarBrand,
   NavbarContent,
   NavbarItem,
-  Button,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  Avatar,
 } from "@nextui-org/react";
-import Image from "next/image";
-
-import lyratechnologies_logo from "public/lyratechnologies_logo.jpeg";
-import { signIn } from "next-auth/react";
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const params = useSearchParams();
+
+  const isChapterPage = pathname.match(/^\/nettrom\/chuong\/\d+/);
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -35,7 +26,7 @@ export default function Header() {
     <div className="relative z-50">
       <Navbar
         maxWidth="xl"
-        className="fixed top-0 z-50 h-20 border-b bg-white px-4"
+        className={`top-0 z-50 h-20 border-b bg-white px-4 ${isChapterPage ? "relative" : "fixed"}`}
       >
         <NavbarContent className="w-full" justify="center">
           <NavbarBrand as="li" className="max-w-fit gap-3">

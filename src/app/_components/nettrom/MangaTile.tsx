@@ -32,20 +32,11 @@ export const MangaTile: React.FC<MangaTileProps> = ({
     <div className="group">
       <figure className="clearfix">
         <div className="relative mb-2">
-          <MangaHoverCard
-            id={id}
-            title={title}
-            thumbnail={thumbnail}
-            chapters={chapters}
-            readedChaptersId={readedChaptersId}
-            showFullDescription={showFullDescription}
-            setShowFullDescription={setShowFullDescription}
-          />
           <div className="absolute bottom-0 left-0 z-[2] w-full px-2 py-1.5">
             <h3 className="mb-2 line-clamp-2 text-[14px] font-semibold leading-tight text-white transition group-hover:line-clamp-4">
               {title}
             </h3>
-            <span className="text-muted-foreground flex items-center justify-between gap-[4px] text-[11px]">
+            <span className="flex items-center justify-between gap-[4px] text-[11px] text-muted-foreground">
               <span className="flex items-center gap-[4px]">
                 <i className="fa fa-star"></i>
                 {Utils.Number.formatViews(
@@ -85,7 +76,7 @@ export const MangaTile: React.FC<MangaTileProps> = ({
                 >
                   {Utils.Mangadex.getChapterTitle(chapter)}
                 </Link>
-                <span className="text-muted-foreground whitespace-nowrap text-base leading-[13px]">
+                <span className="whitespace-nowrap text-base leading-[13px] text-muted-foreground">
                   {Utils.Date.formatNowDistance(
                     new Date(chapter.attributes.readableAt),
                   )

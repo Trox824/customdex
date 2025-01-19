@@ -70,49 +70,6 @@ const MangaTile = (props: {
               </AspectRatio>
             </Link>
           </HoverCardTrigger>
-          <HoverCardContent
-            className="w-[500px] rounded-lg border-border bg-background p-6"
-            side="right"
-          >
-            <div className="flex">
-              <div className="w-[200px] flex-none">
-                <img
-                  className="h-[250px] w-full rounded object-cover"
-                  src={Utils.Mangadex.getCoverArt(props.manga)}
-                  alt={props.title}
-                />
-                <div className="mt-2 text-sm text-muted-foreground">
-                  Total: {props.manga.attributes.lastChapter || "??"}
-                </div>
-              </div>
-              <div className="ml-6 max-h-[250px] flex-1 space-y-6 overflow-y-auto">
-                <h3 className="line-clamp-2 text-2xl font-semibold text-foreground">
-                  {props.title}
-                </h3>
-                <p className="text-lg text-muted-foreground">
-                  {Utils.Mangadex.getOriginalMangaTitle(props.manga)}
-                </p>
-                {props.manga.attributes.description?.en && (
-                  <div className="border-b border-muted-foreground pb-2">
-                    <p className="inline text-lg text-foreground">
-                      {showFullDescription
-                        ? props.manga.attributes.description.en
-                        : `${props.manga.attributes.description.en.slice(0, 150)}... `}
-                      <button
-                        className="ml-1 inline-flex text-base text-blue-500 hover:underline"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setShowFullDescription(!showFullDescription);
-                        }}
-                      >
-                        {showFullDescription ? "Show Less" : "Show More"}
-                      </button>
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </HoverCardContent>
         </HoverCard>
 
         <div className="grow">
@@ -164,7 +121,7 @@ export default function TopTitles({ groupId }: { groupId?: string }) {
     isLoading: topMangaListLoading,
     error: topMangaListError,
   } = useSearchManga({
-    limit: 20,
+    limit: 8,
     includes: [MangadexApi.Static.Includes.COVER_ART],
     order: {
       followedCount: MangadexApi.Static.Order.DESC,
@@ -182,7 +139,7 @@ export default function TopTitles({ groupId }: { groupId?: string }) {
     isLoading: newMangaListLoading,
     error: newMangaListError,
   } = useSearchManga({
-    limit: 20,
+    limit: 8,
     includes: [MangadexApi.Static.Includes.COVER_ART],
     order: {
       createdAt: MangadexApi.Static.Order.DESC,
@@ -200,7 +157,7 @@ export default function TopTitles({ groupId }: { groupId?: string }) {
     isLoading: favoriteMangaListLoading,
     error: favoriteMangaListError,
   } = useSearchManga({
-    limit: 20,
+    limit: 8,
     includes: [MangadexApi.Static.Includes.COVER_ART],
     order: {
       rating: MangadexApi.Static.Order.DESC,

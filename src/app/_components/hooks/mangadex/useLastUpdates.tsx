@@ -21,7 +21,7 @@ export default function useLastUpdates(options: {
   }
   const { data, isLoading, error } = useSWR(["last-updates", options], () =>
     MangadexApi.Chapter.getChapter({
-      includes: ["scanlation_group"],
+      includes: ["scanlation_group", "manga"],
       translatedLanguage: ["vi"],
       contentRating: [
         MangadexApi.Static.MangaContentRating.SAFE,
@@ -35,7 +35,6 @@ export default function useLastUpdates(options: {
       groups: groupId ? [groupId] : undefined,
     }),
   );
-
   if (data) {
     data.data.data.forEach(
       (c) => Utils.Mangadex.extendRelationship(c) as ExtendChapter,

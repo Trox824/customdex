@@ -21,12 +21,12 @@ export default function ChapterPages() {
           <LazyImages images={pages} threshold={(height || 1000) * 3} />
         </div>
       </DataLoader>
-      <div className="mb-2 mt-4 flex flex-col gap-2">
-        <Button disabled={!canNext} onClick={next}>
-          Chương tiếp theo
-        </Button>
-        <Button disabled={!canPrev} onClick={prev}>
+      <div className="mb-2 mt-4 flex flex-row gap-2">
+        <Button className="bg-primary" disabled={!canPrev} onClick={prev}>
           Chương trước
+        </Button>
+        <Button className="bg-primary" disabled={!canNext} onClick={next}>
+          Chương tiếp theo
         </Button>
       </div>
     </div>
