@@ -1,6 +1,6 @@
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { mangadexRouter } from "./routers/mangadex";
-
+import { chapterRouter } from "./routers/chapter";
 /**
  * This is the primary router for your server.
  *
@@ -8,6 +8,7 @@ import { mangadexRouter } from "./routers/mangadex";
  */
 export const appRouter = createTRPCRouter({
   mangadex: mangadexRouter,
+  chapter: chapterRouter,
 });
 
 // export type definition of API
