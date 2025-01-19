@@ -12,15 +12,24 @@ export default function useChapter(chapterId: string | null) {
     },
     {
       enabled: !!chapterId,
+      retry: false,
+      refetchOnWindowFocus: false,
     },
   );
 
   const [chapter, setChapter] = useState<ExtendChapter | null>(null);
 
   useEffect(() => {
-    if (!data?.data) return;
-    setChapter(Utils.Mangadex.extendRelationship(data.data) as ExtendChapter);
+    if (!data?.data?.data) return;
+    setChapter(
+      Utils.Mangadex.extendRelationship(data.data.data) as ExtendChapter,
+    );
   }, [data]);
 
-  return { chapter, data, isLoading, error };
+  return {
+    chapter,
+    data,
+    isLoading,
+    error,
+  };
 }

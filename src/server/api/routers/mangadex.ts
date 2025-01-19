@@ -30,6 +30,7 @@ export const mangadexRouter = createTRPCRouter({
             latestUploadedChapter: z
               .enum([Mangadex.Static.Order.DESC])
               .optional(),
+            followedCount: z.enum([Mangadex.Static.Order.DESC]).optional(),
           })
           .optional(),
         includes: z.array(includesEnum).optional(),
@@ -70,6 +71,8 @@ export const mangadexRouter = createTRPCRouter({
               .enum([Mangadex.Static.Order.DESC])
               .optional(),
             followedCount: z.enum([Mangadex.Static.Order.DESC]).optional(),
+            createdAt: z.enum([Mangadex.Static.Order.DESC]).optional(),
+            rating: z.enum([Mangadex.Static.Order.DESC]).optional(),
           })
           .optional(),
         includes: z.array(includesEnum).optional(),

@@ -18,10 +18,16 @@ export const chapterRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const response = await Mangadex.Chapter.getChapterId(input.id, {
-        includes: input.includes,
-      });
-      return response.data;
+      try {
+        const response = await Mangadex.Chapter.getChapterId(input.id, {
+          includes: input.includes,
+        });
+        // Return the full response to match the expected structure
+        return response;
+      } catch (error) {
+        console.error("Error fetching chapter:", error);
+        throw error;
+      }
     }),
 
   getChapterList: publicProcedure
@@ -41,7 +47,12 @@ export const chapterRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const response = await Mangadex.Chapter.getChapter(input);
-      return response.data;
+      try {
+        const response = await Mangadex.Chapter.getChapter(input);
+        return response;
+      } catch (error) {
+        console.error("Error fetching chapter list:", error);
+        throw error;
+      }
     }),
 });
