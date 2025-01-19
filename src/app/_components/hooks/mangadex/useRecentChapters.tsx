@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import useLastUpdates from "./useLastUpdates";
 import { ExtendChapter } from "~/app/_components/types/mangadex";
 
-export default function useRecentChapters(page: number = 0, groupId?: string) {
+export default function useRecentChapters(page = 0, groupId?: string) {
   const { chapters, isLoading, error, total } = useLastUpdates({
     page,
     groupId,
